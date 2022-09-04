@@ -21,7 +21,9 @@ public class InventoryService {
         }
 
         try {
+            inventoryGrpcServiceClient.initializeConnection();
             inventoryGrpcServiceClient.createItem(itemName, itemId, count);
+            inventoryGrpcServiceClient.closeConnection();
         } catch (InterruptedException ex) {
             System.out.println("Communication with Server Failed!");
         }
@@ -38,7 +40,9 @@ public class InventoryService {
         }
 
         try {
+            inventoryGrpcServiceClient.initializeConnection();
             inventoryGrpcServiceClient.processOrder(orderId, itemId, count);
+            inventoryGrpcServiceClient.closeConnection();
         } catch (InterruptedException ex) {
             System.out.println("Communication with Server Failed!");
         }
@@ -55,7 +59,9 @@ public class InventoryService {
         }
 
         try {
+            inventoryGrpcServiceClient.initializeConnection();
             inventoryGrpcServiceClient.updateInventory(itemId, count);
+            inventoryGrpcServiceClient.closeConnection();
         } catch (InterruptedException ex) {
             System.out.println("Communication with Server Failed!");
         }

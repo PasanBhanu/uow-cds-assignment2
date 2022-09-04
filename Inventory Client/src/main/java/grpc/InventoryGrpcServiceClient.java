@@ -42,6 +42,7 @@ public class InventoryGrpcServiceClient {
         CreateItemResponse response = inventoryServiceBlockingStub.createItem(request);
 
         System.out.println("Response received to Create Item: [" + response.getStatus() + "] " + response.getMessage());
+        System.out.println("");
         Thread.sleep(1000);
     }
 
@@ -58,6 +59,7 @@ public class InventoryGrpcServiceClient {
         ProcessOrderResponse response = inventoryServiceBlockingStub.processOrder(request);
 
         System.out.println("Response received to Process Order: [" + response.getStatus() + "] " + response.getMessage());
+        System.out.println("");
         Thread.sleep(1000);
     }
 
@@ -73,6 +75,7 @@ public class InventoryGrpcServiceClient {
         UpdateInventoryResponse response = inventoryServiceBlockingStub.updateInventory(request);
 
         System.out.println("Response received to Update Inventory: [" + response.getStatus() + "] " + response.getMessage());
+        System.out.println("");
         Thread.sleep(1000);
     }
 }
