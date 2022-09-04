@@ -4,7 +4,7 @@ import service.InventoryService;
 import java.util.Scanner;
 
 public class InventoryClient {
-    public static void main (String[] args) throws InterruptedException {
+    public static void main (String[] args) {
         if (args.length != 1) {
             System.out.println("Usage executable-name <port>");
         }
