@@ -8,10 +8,12 @@ import config.DatabaseConfig;
 import model.Item;
 import model.Order;
 import org.bson.Document;
-import org.bson.types.ObjectId;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class InventoryService {
-    public void createItem(Item item) {
+    public Map<String, String> createItem(Item item) {
         MongoDatabase database = DatabaseConfig.getDatabase();
         MongoCollection<Document> collection = database.getCollection("items");
         Document document = new Document();
@@ -19,9 +21,14 @@ public class InventoryService {
         document.put("itemName", item.getItemName());
         document.put("count", item.getCount());
         collection.insertOne(document);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "200");
+        response.put("message", "Item created successfully.");
+        return response;
     }
 
-    public synchronized void processOrder(Order order) {
+    public synchronized Map<String, String> processOrder(Order order) {
         MongoDatabase database = DatabaseConfig.getDatabase();
         MongoCollection<Document> collection = database.getCollection("items");
         Document query = new Document();
@@ -35,15 +42,27 @@ public class InventoryService {
 
                 // Save Item
                 collection.updateOne(Filters.eq("itemId", order.getItemId()), Updates.set("count", itemCount));
+                Map<String, String> response = new HashMap<>();
+                response.put("status", "200");
+                response.put("message", "Order processed successfully.");
+                return response;
             } else {
                 // Inventory Not Enough
+                Map<String, String> response = new HashMap<>();
+                response.put("status", "403");
+                response.put("message", "Order processed failed. Inventory not sufficient.");
+                return response;
             }
         } else {
             // Invalid Item
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "404");
+            response.put("message", "Item not found.");
+            return response;
         }
     }
 
-    public synchronized void updateInventory(Item item) {
+    public synchronized Map<String, String> updateInventory(Item item) {
         MongoDatabase database = DatabaseConfig.getDatabase();
         MongoCollection<Document> collection = database.getCollection("items");
         Document query = new Document();
@@ -51,11 +70,21 @@ public class InventoryService {
         Document dbItem = collection.find(query).first();
 
         if (dbItem != null) {
+            // Update Inventory
             Integer itemCount = (Integer) dbItem.get("count");
             itemCount += item.getCount();
             collection.updateOne(Filters.eq("itemId", item.getItemId()), Updates.set("count", itemCount));
+
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "200");
+            response.put("message", "Inventory updated successfully.");
+            return response;
         } else {
             // Invalid Item
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "404");
+            response.put("message", "Item not found.");
+            return response;
         }
     }
 

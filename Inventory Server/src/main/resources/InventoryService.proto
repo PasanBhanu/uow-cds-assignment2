@@ -1,0 +1,41 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package iit.uow.communication.grpc.generated;
+
+message CreateItemRequest {
+    string itemId = 1;
+    string itemName = 2;
+    int32 count = 3;
+}
+
+message CreateItemResponse {
+    string status = 1;
+    string message = 2;
+}
+
+message ProcessOrderRequest {
+    string orderNumber = 1;
+    string itemId = 2;
+    int32 count = 3;
+}
+
+message ProcessOrderResponse {
+    string status = 1;
+    string message = 2;
+}
+
+message UpdateInventoryRequest {
+    string itemId = 1;
+    int32 count = 2;
+}
+
+message UpdateInventoryResponse {
+    string status = 1;
+    string message = 2;
+}
+
+service InventoryService {
+    rpc createItem(CreateItemRequest) returns (CreateItemResponse);
+    rpc processOrder(ProcessOrderRequest) returns (ProcessOrderResponse);
+    rpc updateInventory(UpdateInventoryRequest) returns (UpdateInventoryResponse);
+}
