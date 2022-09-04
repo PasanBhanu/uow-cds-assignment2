@@ -42,7 +42,7 @@ public class InventoryClient {
                     break;
                 case -1:
                     System.out.println("-----------------------------------------------");
-                    System.out.println("Thank You for using the Application");
+                    System.out.println("----- Thank You for using the Application -----");
                     System.out.println("-----------------------------------------------");
                     break mainLoop;
                 default:
