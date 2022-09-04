@@ -15,4 +15,8 @@ public class DatabaseConfig {
     public static MongoDatabase getDatabase() {
         return mongoClient.getDatabase("inventory");
     }
+
+    public static void disconnectDatabase() {
+        mongoClient.close();
+    }
 }

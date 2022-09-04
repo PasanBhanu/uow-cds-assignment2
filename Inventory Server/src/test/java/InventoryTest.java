@@ -17,6 +17,8 @@ public class InventoryTest {
 
         InventoryService service = new InventoryService();
         service.createItem(item);
+
+        DatabaseConfig.disconnectDatabase();
     }
 
     @Test
@@ -30,5 +32,21 @@ public class InventoryTest {
 
         InventoryService service = new InventoryService();
         service.processOrder(order);
+
+        DatabaseConfig.disconnectDatabase();
+    }
+
+    @Test
+    public void testUpdateItemInventory() {
+        DatabaseConfig.initializeDatabase();
+
+        Item item = new Item();
+        item.setItemId("IT001");
+        item.setCount(100);
+
+        InventoryService service = new InventoryService();
+        service.updateInventory(item);
+
+        DatabaseConfig.disconnectDatabase();
     }
 }

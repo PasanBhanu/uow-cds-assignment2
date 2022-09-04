@@ -43,4 +43,20 @@ public class InventoryService {
         }
     }
 
+    public synchronized void updateInventory(Item item) {
+        MongoDatabase database = DatabaseConfig.getDatabase();
+        MongoCollection<Document> collection = database.getCollection("items");
+        Document query = new Document();
+        query.put("itemId", item.getItemId());
+        Document dbItem = collection.find(query).first();
+
+        if (dbItem != null) {
+            Integer itemCount = (Integer) dbItem.get("count");
+            itemCount += item.getCount();
+            collection.updateOne(Filters.eq("itemId", item.getItemId()), Updates.set("count", itemCount));
+        } else {
+            // Invalid Item
+        }
+    }
+
 }
