@@ -5,11 +5,16 @@ import java.util.Scanner;
 
 public class InventoryClient {
     public static void main (String[] args) throws InterruptedException {
+        if (args.length != 1) {
+            System.out.println("Usage executable-name <port>");
+        }
+        int serverPort = Integer.parseInt(args[0]);
+
         System.out.println("-----------------------------------------------");
         System.out.println("---- Welcome to Inventory Management System ---");
         System.out.println("-----------------------------------------------");
 
-        InventoryService inventoryService = new InventoryService(new InventoryGrpcServiceClient("localhost", 8081));
+        InventoryService inventoryService = new InventoryService(new InventoryGrpcServiceClient("localhost", serverPort));
         Scanner sc = new Scanner(System.in);
         int choice;
         mainLoop:
