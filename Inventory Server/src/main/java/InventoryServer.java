@@ -7,6 +7,8 @@ import java.io.IOException;
 
 public class InventoryServer {
 
+    public static final String NAME_SERVICE_ADDRESS = "http://localhost:2379";
+
     private int serverPort;
 
     public InventoryServer(String host, int port){
@@ -37,5 +39,19 @@ public class InventoryServer {
         // Initialize Server
         InventoryServer server = new InventoryServer("localhost", serverPort);
         server.startServer();
+
+        // Initialize ETCD
+        LoadBalancerClient client = new LoadBalancerClient(NAME_SERVICE_ADDRESS);
+        client.registerService("InventoryService", "127.0.0.1", serverPort, "tcp");
+
+        Thread printingHook = new Thread(() -> {
+            try {
+                client.unregisterService("InventoryService");
+                System.out.println("Service removed");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        Runtime.getRuntime().addShutdownHook(printingHook);
     }
 }

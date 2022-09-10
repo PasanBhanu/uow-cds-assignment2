@@ -18,8 +18,7 @@ public class EtcdCommunicator {
     public void put(String key, String value) throws IOException {
         System.out.println("Putting Key=" + key + ", Value=" + value);
         String putUrl = etcdAddress + "/v3/kv/put";
-        String serverResponse = callEtcd(putUrl,
-                buildPutRequestPayload(key, value));
+        String serverResponse = callEtcd(putUrl, buildPutRequestPayload(key, value));
         System.out.println(serverResponse);
     }
 

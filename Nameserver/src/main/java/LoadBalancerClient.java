@@ -34,9 +34,15 @@ public class LoadBalancerClient {
         return serviceDetails;
     }
 
-    public void registerService(String serviceName, String IPAddress, int port, String protocol) throws IOException {
-        String serviceInfoValue = buildServerDetailsEntry(IPAddress, port, protocol);
+    public void registerService(String serviceName, String ipAddress, int port, String protocol) throws IOException {
+        String serviceInfoValue = buildServerDetailsEntry(ipAddress, port, protocol);
         etcdClient.put(serviceName, serviceInfoValue);
+
+        System.out.println("Service Registered - " + serviceName + " - " + ipAddress + ":" + port);
+    }
+
+    public void unregisterService(String serviceName) throws IOException {
+        etcdClient.put(serviceName, "");
     }
 
     public class ServiceDetails {
