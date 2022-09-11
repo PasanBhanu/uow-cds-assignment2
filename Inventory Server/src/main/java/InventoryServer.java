@@ -1,21 +1,40 @@
 import config.DatabaseConfig;
 import grpc.InventoryGrpcService;
+import iit.uow.nameserver.DistributedLock;
+import iit.uow.nameserver.DistributedTx;
+import iit.uow.nameserver.DistributedTxParticipant;
+import iit.uow.nameserver.LoadBalancerClient;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import org.apache.zookeeper.KeeperException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InventoryServer {
 
     public static final String NAME_SERVICE_ADDRESS = "http://localhost:2379";
+    public static final String ZOOKEEPER_ADDRESS = "localhost:2181";
 
+    private DistributedLock leaderLock;
+    private AtomicBoolean isLeader = new AtomicBoolean(false);
+    private byte[] leaderData;
     private int serverPort;
 
-    public InventoryServer(String host, int port){
+    private DistributedTx transaction;
+
+    private InventoryServiceDistributed inventoryServiceDistributed;
+
+    public InventoryServer(String host, int port) throws InterruptedException, IOException, KeeperException {
         this.serverPort = port;
+        leaderLock = new DistributedLock("InventoryServerCluster", buildServerData(host, port));
+        inventoryServiceDistributed = new InventoryServiceDistributed();
+        transaction = new DistributedTxParticipant(inventoryServiceDistributed);
     }
 
-    public void startServer() throws IOException, InterruptedException {
+    public void startServer() throws IOException, InterruptedException, KeeperException {
         Server server = ServerBuilder
                 .forPort(serverPort)
                 .addService(new InventoryGrpcService())
@@ -24,10 +43,49 @@ public class InventoryServer {
 
         System.out.println("Inventory Server started on: " + serverPort);
 
+        tryToBeLeader();
         server.awaitTermination();
     }
 
-    public static void main (String[] args) throws Exception{
+    public static String buildServerData(String ip, int port) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(ip).append(":").append(port);
+        return builder.toString();
+    }
+
+    private void tryToBeLeader() throws KeeperException, InterruptedException {
+        Thread leaderCampaignThread = new Thread(new LeaderCampaignThread());
+        leaderCampaignThread.start();
+    }
+
+    class LeaderCampaignThread implements Runnable {
+        private byte[] currentLeaderData = null;
+
+        @Override
+        public void run() {
+            System.out.println("Starting the Leader Campaign");
+
+            try {
+                boolean leader = leaderLock.tryAcquireLock();
+
+                while (!leader) {
+                    byte[] leaderData = leaderLock.getLockHolderData();
+                    if (currentLeaderData != leaderData) {
+                        currentLeaderData = leaderData;
+                        setCurrentLeaderData(currentLeaderData);
+                    }
+                    Thread.sleep(10000);
+                    leader = leaderLock.tryAcquireLock();
+                }
+                System.out.println("Leader Lock Acquired. Acting as Primary!");
+                isLeader.set(true);
+                currentLeaderData = null;
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.out.println("Usage executable-name <port>");
         }
@@ -37,21 +95,45 @@ public class InventoryServer {
         DatabaseConfig.initializeDatabase();
 
         // Initialize Server
+        DistributedLock.setZooKeeperURL(ZOOKEEPER_ADDRESS);
         InventoryServer server = new InventoryServer("localhost", serverPort);
         server.startServer();
 
         // Initialize ETCD
         LoadBalancerClient client = new LoadBalancerClient(NAME_SERVICE_ADDRESS);
-        client.registerService("InventoryService", "127.0.0.1", serverPort, "tcp");
+        client.registerService("service.InventoryService", "127.0.0.1", serverPort, "tcp");
 
         Thread printingHook = new Thread(() -> {
             try {
-                client.unregisterService("InventoryService");
+                client.unregisterService("service.InventoryService");
                 System.out.println("Service removed");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
         Runtime.getRuntime().addShutdownHook(printingHook);
+    }
+
+    public boolean isLeader() {
+        return isLeader.get();
+    }
+
+    private synchronized void setCurrentLeaderData(byte[] leaderData) {
+        this.leaderData = leaderData;
+    }
+
+    public synchronized String[] getCurrentLeaderData() {
+        return new String(leaderData).split(":");
+    }
+
+    public List<String[]> getOthersData() throws KeeperException, InterruptedException {
+        List<String[]> result = new ArrayList<>();
+        List<byte[]> othersData = leaderLock.getOthersData();
+
+        for (byte[] data : othersData) {
+            String[] dataStrings = new String(data).split(":");
+            result.add(dataStrings);
+        }
+        return result;
     }
 }
