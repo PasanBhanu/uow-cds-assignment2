@@ -1,3 +1,5 @@
+package iit.uow.nameserver;
+
 import org.json.JSONObject;
 
 import java.io.IOException;

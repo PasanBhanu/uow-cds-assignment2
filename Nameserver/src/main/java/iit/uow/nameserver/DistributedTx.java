@@ -1,3 +1,5 @@
+package iit.uow.nameserver;
+
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 

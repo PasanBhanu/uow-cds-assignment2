@@ -1,3 +1,5 @@
+package iit.uow.nameserver;
+
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 

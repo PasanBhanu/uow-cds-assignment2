@@ -1,3 +1,5 @@
+package iit.uow.nameserver;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
