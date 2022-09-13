@@ -69,8 +69,10 @@ public class EtcdCommunicator {
 
     private String buildGetRequestPayload(String key) {
         String keyEncoded = Base64.getEncoder().encodeToString(key.getBytes());
+        String rangeEncoded = Base64.getEncoder().encodeToString((key + "9999").getBytes());
         JSONObject putRequest = new JSONObject();
         putRequest.put("key", keyEncoded);
+        putRequest.put("range_end", rangeEncoded);
         return putRequest.toString();
     }
 }

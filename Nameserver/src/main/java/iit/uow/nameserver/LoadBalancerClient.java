@@ -38,13 +38,13 @@ public class LoadBalancerClient {
 
     public void registerService(String serviceName, String ipAddress, int port, String protocol) throws IOException {
         String serviceInfoValue = buildServerDetailsEntry(ipAddress, port, protocol);
-        etcdClient.put(serviceName, serviceInfoValue);
+        etcdClient.put(serviceName + port, serviceInfoValue);
 
         System.out.println("Service Registered - " + serviceName + " - " + ipAddress + ":" + port);
     }
 
-    public void unregisterService(String serviceName) throws IOException {
-        etcdClient.put(serviceName, "");
+    public void unregisterService(String serviceName, int port) throws IOException {
+        etcdClient.put(serviceName + port, "");
     }
 
     public class ServiceDetails {
@@ -55,8 +55,20 @@ public class LoadBalancerClient {
         ServiceDetails populate(String serverResponse) {
             JSONObject serverResponseJSONObject = new JSONObject(serverResponse);
             if (serverResponseJSONObject.has("kvs")) {
+                JSONArray servers = new JSONArray();
+
                 JSONArray values = serverResponseJSONObject.getJSONArray("kvs");
-                JSONObject firstValue = (JSONObject) values.get(0);
+                for (Object item : values) {
+                    JSONObject firstValue = (JSONObject) item;
+                    if (firstValue.has("value")) {
+                        String encodedValue = (String) firstValue.get("value");
+                        if (encodedValue != null) {
+                            servers.put(firstValue);
+                        }
+                    }
+                }
+
+                JSONObject firstValue = (JSONObject) servers.get(0);
                 String encodedValue = (String) firstValue.get("value");
                 byte[] serverDetailsBytes = Base64.getDecoder().decode(encodedValue.getBytes(StandardCharsets.UTF_8));
                 JSONObject serverDetailsJson = new JSONObject(new String(serverDetailsBytes));

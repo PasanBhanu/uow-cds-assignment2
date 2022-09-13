@@ -90,7 +90,7 @@ public class InventoryServer {
 
         Thread printingHook = new Thread(() -> {
             try {
-                client.unregisterService("service.InventoryService");
+                client.unregisterService("service.InventoryService", serverPort);
                 System.out.println("Service removed");
             } catch (IOException e) {
                 throw new RuntimeException(e);
