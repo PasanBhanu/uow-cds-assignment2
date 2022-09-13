@@ -84,11 +84,6 @@ public class InventoryServer {
         // Initialize Database
         DatabaseConfig.initializeDatabase();
 
-        // Initialize Server
-        DistributedLock.setZooKeeperURL(ZOOKEEPER_ADDRESS);
-        InventoryServer server = new InventoryServer("localhost", serverPort);
-        server.startServer();
-
         // Initialize ETCD
         LoadBalancerClient client = new LoadBalancerClient(NAME_SERVICE_ADDRESS);
         client.registerService("service.InventoryService", "127.0.0.1", serverPort, "tcp");
@@ -102,6 +97,11 @@ public class InventoryServer {
             }
         });
         Runtime.getRuntime().addShutdownHook(printingHook);
+
+        // Initialize Server
+        DistributedLock.setZooKeeperURL(ZOOKEEPER_ADDRESS);
+        InventoryServer server = new InventoryServer("localhost", serverPort);
+        server.startServer();
     }
 
     private synchronized void setCurrentLeaderData(byte[] leaderData) {
