@@ -1,12 +1,11 @@
 import config.DatabaseConfig;
 import grpc.InventoryGrpcService;
 import iit.uow.nameserver.DistributedLock;
-import iit.uow.nameserver.DistributedTx;
-import iit.uow.nameserver.DistributedTxParticipant;
 import iit.uow.nameserver.LoadBalancerClient;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.apache.zookeeper.KeeperException;
+import zookeeper.ZookeeperService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,19 +18,11 @@ public class InventoryServer {
     public static final String ZOOKEEPER_ADDRESS = "localhost:2181";
 
     private DistributedLock leaderLock;
-    private AtomicBoolean isLeader = new AtomicBoolean(false);
-    private byte[] leaderData;
     private int serverPort;
-
-    private DistributedTx transaction;
-
-    private InventoryServiceDistributed inventoryServiceDistributed;
 
     public InventoryServer(String host, int port) throws InterruptedException, IOException, KeeperException {
         this.serverPort = port;
         leaderLock = new DistributedLock("InventoryServerCluster", buildServerData(host, port));
-        inventoryServiceDistributed = new InventoryServiceDistributed();
-        transaction = new DistributedTxParticipant(inventoryServiceDistributed);
     }
 
     public void startServer() throws IOException, InterruptedException, KeeperException {
@@ -77,9 +68,8 @@ public class InventoryServer {
                     Thread.sleep(10000);
                     leader = leaderLock.tryAcquireLock();
                 }
-                System.out.println("Leader Lock Acquired. Acting as Primary!");
-                isLeader.set(true);
                 currentLeaderData = null;
+                beTheLeader();
             } catch (Exception e) {
             }
         }
@@ -114,16 +104,8 @@ public class InventoryServer {
         Runtime.getRuntime().addShutdownHook(printingHook);
     }
 
-    public boolean isLeader() {
-        return isLeader.get();
-    }
-
     private synchronized void setCurrentLeaderData(byte[] leaderData) {
-        this.leaderData = leaderData;
-    }
-
-    public synchronized String[] getCurrentLeaderData() {
-        return new String(leaderData).split(":");
+        ZookeeperService.leaderData = leaderData;
     }
 
     public List<String[]> getOthersData() throws KeeperException, InterruptedException {
@@ -135,5 +117,10 @@ public class InventoryServer {
             result.add(dataStrings);
         }
         return result;
+    }
+
+    private void beTheLeader() {
+        System.out.println("Leader Lock Acquired. Acting as Primary!");
+        ZookeeperService.isLeader = new AtomicBoolean(true);
     }
 }

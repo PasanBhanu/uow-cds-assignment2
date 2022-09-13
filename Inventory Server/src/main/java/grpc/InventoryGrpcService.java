@@ -4,6 +4,7 @@ import iit.uow.communication.grpc.generated.InventoryServiceGrpc;
 import model.Item;
 import model.Order;
 import service.InventoryService;
+import service.InventoryServiceDistributed;
 
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceI
         order.setItemId(request.getItemId());
         order.setCount(request.getCount());
 
-        InventoryService service = new InventoryService();
+        InventoryServiceDistributed service = new InventoryServiceDistributed();
         Map<String, String> serviceResponse = service.processOrder(order);
 
         iit.uow.communication.grpc.generated.ProcessOrderResponse response = iit.uow.communication.grpc.generated.ProcessOrderResponse
@@ -64,7 +65,7 @@ public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceI
         item.setItemId(request.getItemId());
         item.setCount(request.getCount());
 
-        InventoryService service = new InventoryService();
+        InventoryServiceDistributed service = new InventoryServiceDistributed();
         Map<String, String> serviceResponse = service.updateInventory(item);
 
         iit.uow.communication.grpc.generated.UpdateInventoryResponse response = iit.uow.communication.grpc.generated.UpdateInventoryResponse
